@@ -100,6 +100,26 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-//Todo PUT -> Posts (Specific ID)
+// ✔ PUT -> Posts (Specific ID)
+router.put('/:id', (req, res) => {
+  const id = req.params.id;
+  //console.log("id", id)
+
+  Data.update(id, req.body)
+    .then(post => {
+      //console.log('Post',post)
+      if(!post) {
+        res.status(404).json({ errorMessage: "The user with that ID does not exist." });
+      }else if (!req.body.title || !req.body.contents) { //Todo: Still updates title/content when it's empty
+        res.status(400).json({ errorMessage: "Please provide a title or some content for the post." });
+      } else
+      res.status(200).json(post)
+    })
+    .catch(err => {
+      res.status(500).json({ error: "The new post info could not be updated." });
+    });
+});
+
+
 
 module.exports = router
