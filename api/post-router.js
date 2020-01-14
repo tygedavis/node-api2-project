@@ -56,7 +56,7 @@ router.post('/', (req, res) => {
       if(!req.body.title || !req.body.contents) { //Todo: Maybe check out why the request still sends even when there is no title or contents
         res.status(400).json({ errorMessage: "Please provide title and contents for the post." });
       }else
-        console.log(post)
+        //console.log(post)
         res.status(201).json(post);
     })
     .catch(err => {
@@ -65,11 +65,40 @@ router.post('/', (req, res) => {
 });
 
 
-//Todo POST -> Comments (Specific ID)
+//Todo POST -> Comments (Specific Post ID)
+router.post('/:id/comments', (req, res) => {
+  const id = req.params.id;
+  //Data to send: text / post_id
+  //console.log(req.body)
+
+  Data.insertComment(req.body)
+    .then(comment => {
+      if(comment.post_id !== id) {
+        res.status(404).json({ message: "The post with that ID does not exist." })
+      }else if(!comment.text) {
+        res.status(400).json({ errorMessage: "Please provide text for the comment." })
+      }else
+      res.status(201).json(comment)
+    })
+    .catch(err => {
+      res.status(500).json({ error: "There was an error while saving the comment to the database." });
+    });
+});
 
 
-//Todo DELETE -> Posts (Specific ID)
+// ✔ DELETE -> Posts (Specific ID)
+router.delete('/:id', (req, res) => {
+  const id = req.params.id
+  //console.log(id)
 
+  Data.remove(id)
+    .then(deletedPost => {
+      res.status(200).json(deletedPost);
+    })
+    .catch(err => {
+      res.status(404).json({ message: "The post with that ID doesn't exist." });
+    });
+});
 
 //Todo PUT -> Posts (Specific ID)
 
