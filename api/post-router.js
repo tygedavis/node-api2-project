@@ -2,6 +2,8 @@ const router = require('express').Router();
 
 const Data = require('../data/db.js');
 
+//TODO There are two problems where you need to cancell the requests or else data is still sent through
+
 // ✔ GET -> Posts (general)
 router.get('/', (req, res) => {
   Data.find()
@@ -21,10 +23,10 @@ router.get('/:id', (req, res) => {
   Data.findById(id)
     .then(post => {
       //console.log(post)
-      if(post) {
-        res.status(200).json(post);
-      } else { //Todo Maybe check up on this error message, just returns an empty array
+      if(!post) {
         res.status(404).json({ message: "The post with that ID does not exist." });
+      } else {
+        res.status(200).json(post);
       };
     })
     .catch(err => {
@@ -53,10 +55,11 @@ router.post('/', (req, res) => {
 
   Data.insert(req.body)
     .then(post => {
-      if(!req.body.title || !req.body.contents) { //Todo: Maybe check out why the request still sends even when there is no title or contents
+      //console.log(post) //post = post id
+      //console.log(req.body) //req.body = title / contents
+      if(!req.body.title || !req.body.contents) { //TODO: Cancell Request
         res.status(400).json({ errorMessage: "Please provide title and contents for the post." });
       }else
-        //console.log(post)
         res.status(201).json(post);
     })
     .catch(err => {
@@ -68,21 +71,33 @@ router.post('/', (req, res) => {
 //Todo POST -> Comments (Specific Post ID)
 router.post('/:id/comments', (req, res) => {
   const id = req.params.id;
-  //Data to send: text / post_id
-  //console.log(req.body)
+  //console.log(id) // post id
+  //console.log(req.body) //text / post_id
 
-  Data.insertComment(req.body)
-    .then(comment => {
-      if(comment.post_id !== id) {
-        res.status(404).json({ message: "The post with that ID does not exist." })
-      }else if(!comment.text) {
-        res.status(400).json({ errorMessage: "Please provide text for the comment." })
-      }else
-      res.status(201).json(comment)
+  if(!req.body.text)
+    res.status(400).json({ errorMessage: "please provide text for the comment." });
+
+  Data.findById(id)
+    .then(post => {
+      if(!post) {
+        res.status(404).json({ error: "No posts with that ID." });
+      }
     })
-    .catch(err => {
-      res.status(500).json({ error: "There was an error while saving the comment to the database." });
-    });
+    .catch()
+
+  // Data.insertComment(req.body)
+  //   .then(comment => {
+  //     //console.log(comment) // comment id
+  //     if(req.body.post_id !== id) {
+  //       res.status(404).json({ message: "The post with that ID does not exist." })
+  //     }else if(!comment.text) {
+  //       res.status(400).json({ errorMessage: "Please provide text for the comment." })
+  //     }else
+  //     res.status(201).json(comment)
+  //   })
+  //   .catch(err => {
+  //     res.status(500).json({ error: "There was an error while saving the comment to the database." });
+  //   });
 });
 
 
@@ -110,7 +125,7 @@ router.put('/:id', (req, res) => {
       //console.log('Post',post)
       if(!post) {
         res.status(404).json({ errorMessage: "The user with that ID does not exist." });
-      }else if (!req.body.title || !req.body.contents) { //Todo: Still updates title/content when it's empty
+      }else if (!req.body.title || !req.body.contents) { //TODO: Cancell Request
         res.status(400).json({ errorMessage: "Please provide a title or some content for the post." });
       } else
       res.status(200).json(post)
