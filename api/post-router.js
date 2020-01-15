@@ -68,36 +68,32 @@ router.post('/', (req, res) => {
 });
 
 
-//Todo POST -> Comments (Specific Post ID)
+// ✔ POST -> Comments (Specific Post ID)
 router.post('/:id/comments', (req, res) => {
   const id = req.params.id;
-  //console.log(id) // post id
-  //console.log(req.body) //text / post_id
-
-  if(!req.body.text)
-    res.status(400).json({ errorMessage: "please provide text for the comment." });
+  req.body = {...req.body, post_id : id};
 
   Data.findById(id)
     .then(post => {
       if(!post) {
         res.status(404).json({ error: "No posts with that ID." });
+      }else if(!req.body.text) {
+        res.status(400).json({ errorMessage: "Please provide text for the comment." });
+      }else if(post) {
+        Data.insertComment(req.body)
+          .then(comment => {
+            //console.log(comment)
+            res.status(201).json(comment);
+          })
+          .catch(err => {
+            console.log(err)
+            res.status(400).json({ error: "You suck" });
+          })
       }
     })
-    .catch()
-
-  // Data.insertComment(req.body)
-  //   .then(comment => {
-  //     //console.log(comment) // comment id
-  //     if(req.body.post_id !== id) {
-  //       res.status(404).json({ message: "The post with that ID does not exist." })
-  //     }else if(!comment.text) {
-  //       res.status(400).json({ errorMessage: "Please provide text for the comment." })
-  //     }else
-  //     res.status(201).json(comment)
-  //   })
-  //   .catch(err => {
-  //     res.status(500).json({ error: "There was an error while saving the comment to the database." });
-  //   });
+    .catch(err => {
+      res.status(500).json({ error: "There was an error while saving the comment to the database." });
+    })
 });
 
 
